@@ -140,7 +140,7 @@ export default function Login() {
                         backgroundClip: 'text',
                         marginBottom: '0.5rem'
                     }}>
-                        My Workspace
+                        ThoughtOS
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
                         Your personal content hub
