@@ -1,0 +1,187 @@
+/* Blog Visuals - Unique & Beautiful */
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+/* Glassmorphic Card */
+.visual-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: var(--shadow-md);
+}
+
+.visual-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--glass-border-strong);
+}
+
+/* Card Content Area - Added padding since image is gone */
+.visual-card-content {
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.visual-card-date {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.visual-card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.8rem 0;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.visual-card-excerpt {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.visual-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.visual-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.visual-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Circular Action Buttons */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.action-btn.delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+
+/* Immersive View Modal */
+.immersive-modal {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.immersive-header {
+    height: 300px;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    position: relative;
+    margin: -1.5rem -1.5rem 2rem -1.5rem;
+    /* Negative internal padding of standard modal */
+    width: calc(100% + 3rem);
+}
+
+.immersive-header img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.immersive-content {
+    padding: 0 1rem;
+}
+
+.immersive-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.immersive-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.immersive-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
+/* Add Post Layout */
+.grid-form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .blog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .immersive-header {
+        height: 200px;
+    }
+
+    .immersive-title {
+        font-size: 2rem;
+    }
+}

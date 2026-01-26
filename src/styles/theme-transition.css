@@ -1,0 +1,14 @@
+/* View Transition API Overrides */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Smooth Theme Transition for All Elements */
+* {
+    transition: background-color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        border-color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        box-shadow 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
