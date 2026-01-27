@@ -216,11 +216,13 @@ export default function WorkspaceManager() {
             }} />
 
             {/* Main Layout */}
-            <div style={{
+            <div className="container page-container" style={{
+                maxWidth: '1200px',
+                margin: '0 auto',
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: '3rem',
-                padding: '0 3rem 3rem 3rem',
+                gap: '2rem',
+                padding: '1rem 2rem 2rem 2rem',
                 position: 'relative',
                 zIndex: 1
             }}>
@@ -243,107 +245,115 @@ export default function WorkspaceManager() {
                         </h3>
                     </div>
 
-                    {(showArchived ? archivedWorkspaces : workspaces).map(workspace => {
-                        const isSelected = selectedWorkspace?.id === workspace.id;
-                        const isHovered = hoveredCapsule === workspace.id;
+                    {/* Workspace List */}
+                    <div className="workspace-capsules" style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1rem'
+                    }}>
+                        {(showArchived ? archivedWorkspaces : workspaces).map(workspace => {
+                            const isSelected = selectedWorkspace?.id === workspace.id;
+                            const isHovered = hoveredCapsule === workspace.id;
 
-                        return (
-                            <div
-                                key={workspace.id}
-                                onClick={() => {
-                                    setSelectedWorkspace(workspace);
-                                    if (!workspace.is_archived) switchWorkspace(workspace);
-                                }}
-                                onMouseEnter={() => setHoveredCapsule(workspace.id)}
-                                onMouseLeave={() => setHoveredCapsule(null)}
-                                style={{
-                                    position: 'relative',
-                                    cursor: isSelected ? 'default' : 'pointer',
-                                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                }}
-                            >
-                                {/* Breathing Glow Ring for Active */}
-                                {isSelected && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        inset: '-8px',
-                                        background: getWorkspaceGradient(workspace.type),
-                                        borderRadius: '50px',
-                                        opacity: 0.4,
-                                        filter: 'blur(12px)',
-                                        animation: 'breathe 3s ease-in-out infinite',
-                                        zIndex: 0
-                                    }} />
-                                )}
+                            return (
+                                <div
+                                    key={workspace.id}
+                                    onClick={() => {
+                                        setSelectedWorkspace(workspace);
+                                        if (!workspace.is_archived) switchWorkspace(workspace);
+                                    }}
+                                    onMouseEnter={() => setHoveredCapsule(workspace.id)}
+                                    onMouseLeave={() => setHoveredCapsule(null)}
+                                    className="workspace-capsule-item"
+                                    style={{
+                                        position: 'relative',
+                                        cursor: isSelected ? 'default' : 'pointer',
+                                        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                    }}
+                                >
+                                    {/* Breathing Glow Ring for Active */}
+                                    {isSelected && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            inset: '-8px',
+                                            background: getWorkspaceGradient(workspace.type),
+                                            borderRadius: '50px',
+                                            opacity: 0.4,
+                                            filter: 'blur(12px)',
+                                            animation: 'breathe 3s ease-in-out infinite',
+                                            zIndex: 0
+                                        }} />
+                                    )}
 
-                                {/* Capsule */}
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                    padding: '0.75rem',
-                                    paddingRight: isHovered || isSelected ? '1.5rem' : '0.75rem',
-                                    background: isSelected
-                                        ? 'var(--bg-glass)'
-                                        : 'var(--bg-secondary)',
-                                    backdropFilter: 'blur(20px)',
-                                    borderRadius: '50px',
-                                    border: isSelected
-                                        ? '2px solid var(--glass-border)'
-                                        : '1px solid var(--glass-border)',
-                                    boxShadow: isSelected
-                                        ? 'var(--shadow-lg)'
-                                        : 'var(--shadow-md)',
-                                    width: isHovered || isSelected ? '240px' : '80px',
-                                    position: 'relative',
-                                    zIndex: 1,
-                                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                }}>
-                                    {/* Icon Circle */}
-                                    <div style={{
-                                        width: '48px',
-                                        height: '48px',
-                                        borderRadius: '50%',
-                                        background: getWorkspaceGradient(workspace.type),
+                                    {/* Capsule */}
+                                    <div className="workspace-capsule" style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexShrink: 0,
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                                        transform: isHovered ? 'rotate(3deg) scale(1.05)' : 'rotate(0deg) scale(1)',
-                                        transition: 'transform 0.3s ease'
+                                        gap: '1rem',
+                                        padding: '0.75rem',
+                                        paddingRight: isHovered || isSelected ? '1.5rem' : '0.75rem',
+                                        background: isSelected
+                                            ? 'var(--bg-glass)'
+                                            : 'var(--bg-secondary)',
+                                        backdropFilter: 'blur(20px)',
+                                        borderRadius: '50px',
+                                        border: isSelected
+                                            ? '2px solid var(--glass-border)'
+                                            : '1px solid var(--glass-border)',
+                                        boxShadow: isSelected
+                                            ? 'var(--shadow-lg)'
+                                            : 'var(--shadow-md)',
+                                        width: isHovered || isSelected ? '240px' : '80px',
+                                        position: 'relative',
+                                        zIndex: 1,
+                                        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                                     }}>
-                                        <span style={{
-                                            fontSize: '1.5rem',
-                                            filter: 'brightness(1.2)'
+                                        {/* Icon Circle */}
+                                        <div style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            borderRadius: '50%',
+                                            background: getWorkspaceGradient(workspace.type),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexShrink: 0,
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                            transform: isHovered ? 'rotate(3deg) scale(1.05)' : 'rotate(0deg) scale(1)',
+                                            transition: 'transform 0.3s ease'
                                         }}>
-                                            {workspace.icon}
-                                        </span>
-                                    </div>
+                                            <span style={{
+                                                fontSize: '1.5rem',
+                                                filter: 'brightness(1.2)'
+                                            }}>
+                                                {workspace.icon}
+                                            </span>
+                                        </div>
 
-                                    {/* Text Container with overflow control */}
-                                    <div style={{
-                                        flex: 1,
-                                        overflow: 'hidden',
-                                        opacity: isHovered || isSelected ? 1 : 0,
-                                        transition: 'opacity 0.3s ease'
-                                    }}>
-                                        <span style={{
-                                            fontSize: '0.95rem',
-                                            fontWeight: '600',
-                                            color: 'var(--text-primary)',
-                                            whiteSpace: 'nowrap',
+                                        {/* Text Container with overflow control */}
+                                        <div style={{
+                                            flex: 1,
                                             overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            display: 'block'
+                                            opacity: isHovered || isSelected ? 1 : 0,
+                                            transition: 'opacity 0.3s ease'
                                         }}>
-                                            {workspace.name}
-                                        </span>
+                                            <span style={{
+                                                fontSize: '0.95rem',
+                                                fontWeight: '600',
+                                                color: 'var(--text-primary)',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                display: 'block'
+                                            }}>
+                                                {workspace.name}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
 
                     {/* Add New Context Button - Only show in Active mode */}
                     {!showArchived && (
@@ -926,6 +936,7 @@ export default function WorkspaceManager() {
                 )
             }
 
+            {/* Animations and Mobile Styles */}
             <style>{`
                 @keyframes breathe {
                     0%, 100% {
@@ -997,6 +1008,39 @@ export default function WorkspaceManager() {
                     </div>
                 </div>
             )}
+
+            {/* Animations and Mobile Styles */}
+            <style>{`
+                @keyframes breathe {
+                    0%, 100% { transform: scale(1); opacity: 0.4; }
+                    50% { transform: scale(1.05); opacity: 0.6; }
+                }
+
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+
+                @media (max-width: 768px) {
+                    .workspace-layout {
+                        flex-direction: column !important;
+                        padding: 1rem !important;
+                        gap: 1.5rem !important;
+                    }
+                    .workspace-capsules {
+                        flex-direction: row !important;
+                        overflow-x: auto !important;
+                        padding-bottom: 0.5rem !important;
+                        -webkit-overflow-scrolling: touch;
+                    }
+                    .workspace-capsule {
+                        width: 120px !important;
+                    }
+                    .workspace-capsule-item {
+                        flex-shrink: 0;
+                    }
+                }
+            `}</style>
         </div >
     );
 }

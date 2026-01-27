@@ -168,6 +168,11 @@ a:hover {
     padding: 0 2rem;
 }
 
+.page-container {
+    padding: 2rem;
+    max-width: 100%;
+}
+
 .flex {
     display: flex;
 }
@@ -339,6 +344,10 @@ a:hover {
 
     .container {
         padding: 0 1rem;
+    }
+
+    .page-container {
+        padding: 1.5rem 1rem !important;
     }
 
     h1 {

@@ -14,12 +14,18 @@ export const useWorkspace = () => {
 export const WorkspaceProvider = ({ children }) => {
     const [currentWorkspace, setCurrentWorkspace] = useState(null);
     const [workspaces, setWorkspaces] = useState([]);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Load workspaces on mount
     useEffect(() => {
         loadWorkspaces();
     }, []);
+
+    // Close sidebar on route change (for mobile)
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [currentWorkspace]);
 
     const loadWorkspaces = async () => {
         try {
@@ -48,6 +54,7 @@ export const WorkspaceProvider = ({ children }) => {
         try {
             setCurrentWorkspace(workspace);
             workspaceStorage.setCurrentWorkspaceId(workspace.id);
+            setIsSidebarOpen(false); // Close sidebar on switch
 
             // Trigger a custom event that components can listen to
             window.dispatchEvent(new CustomEvent('workspaceChanged', {
@@ -93,6 +100,8 @@ export const WorkspaceProvider = ({ children }) => {
         currentWorkspace,
         workspaces,
         loading,
+        isSidebarOpen,
+        setIsSidebarOpen,
         switchWorkspace,
         createWorkspace,
         deleteWorkspace,

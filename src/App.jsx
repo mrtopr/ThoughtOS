@@ -45,7 +45,11 @@ function App() {
               <ProtectedRoute>
                 <Sidebar />
                 <Navbar />
-                <main style={{ marginLeft: 'var(--sidebar-width-collapsed)', minHeight: 'calc(100vh - 70px)' }}>
+                <main className="main-content" style={{
+                  marginLeft: 'var(--sidebar-width-collapsed)',
+                  minHeight: 'calc(100vh - 70px)',
+                  transition: 'margin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                }}>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/links" element={<Links />} />
@@ -55,6 +59,14 @@ function App() {
                     <Route path="/videos" element={<Videos />} />
                     <Route path="/workspaces" element={<WorkspaceManager />} />
                   </Routes>
+                  <style>{`
+                    @media (max-width: 768px) {
+                      .main-content {
+                        margin-left: 0 !important;
+                        padding: 0 !important;
+                      }
+                    }
+                  `}</style>
                 </main>
               </ProtectedRoute>
             } />

@@ -136,12 +136,10 @@
     -webkit-backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    /* Better for scrollable content */
+    align-items: center;
     z-index: 9999;
     animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 3rem 1rem;
-    /* Space for scrolling */
+    padding: 1rem;
     overflow-y: auto;
 }
 
@@ -151,10 +149,8 @@
     padding: 2.5rem;
     max-width: 650px;
     width: 100%;
-    max-height: 85vh;
-    /* Slightly reduced to ensure it fits */
+    max-height: 90vh;
     overflow-y: auto;
-    /* Scroll content if it's too tall */
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-color);
     animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -497,8 +493,10 @@
     }
 
     .modal-content {
-        padding: 1.5rem;
-        width: 95%;
+        padding: 1.5rem 1rem;
+        width: 100%;
+        max-height: 95vh;
+        border-radius: 20px;
     }
 
     .content-card {

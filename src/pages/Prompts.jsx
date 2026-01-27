@@ -103,8 +103,7 @@ export default function Prompts() {
     const displayPrompts = selectedCategory === 'all' ? filteredPrompts : filteredPrompts.filter(p => p.category === selectedCategory);
 
     return (
-        <div className="container" style={{
-            padding: '2rem 3rem 2rem 2rem',
+        <div className="container page-container" style={{
             maxWidth: '100%'
         }}>
             <div className="fade-in">

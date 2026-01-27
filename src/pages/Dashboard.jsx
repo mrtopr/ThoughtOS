@@ -158,13 +158,12 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="container" style={{
-            padding: '2rem 3rem 2rem 2rem',
+        <div className="container dashboard-container page-container" style={{
             maxWidth: '100%'
         }}>
             <div className="fade-in">
                 {/* Header */}
-                <div style={{ marginBottom: '3rem' }}>
+                <div className="dashboard-header" style={{ marginBottom: '3rem' }}>
                     <h1 style={{
                         marginBottom: '0.5rem',
                         fontSize: '2rem',
@@ -185,7 +184,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Main Content Layout */}
-                <div style={{
+                <div className="dashboard-layout" style={{
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: '2.5rem',
@@ -196,7 +195,7 @@ export default function Dashboard() {
                         flex: '2 1 600px', // Grow/Shrink, Basis
                         minWidth: '0' // Prevent flexbox overflow issues
                     }}>
-                        <div style={{
+                        <div className="command-tiles-grid" style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', // Wider minimum width
                             gap: '1.5rem',
@@ -540,6 +539,25 @@ export default function Dashboard() {
                     transform: translateX(4px);
                     box-shadow: var(--shadow-md);
                     border-color: var(--accent-primary);
+                }
+
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 1rem !important;
+                    }
+                    .dashboard-header {
+                        margin-bottom: 2rem !important;
+                    }
+                    .dashboard-layout {
+                        gap: 1.5rem !important;
+                    }
+                    .command-tiles-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .command-tile {
+                        padding: 1.5rem !important;
+                        min-height: 180px !important;
+                    }
                 }
             `}</style>
         </div>
