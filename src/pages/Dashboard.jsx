@@ -80,14 +80,16 @@ export default function Dashboard() {
 
             // Get recent items from all categories
             const allItems = [
-                ...blogPosts.slice(0, 3).map(item => ({ ...item, type: 'blog', icon: '📝' })),
-                ...projects.slice(0, 2).map(item => ({ ...item, type: 'project', icon: '💼' })),
-                ...links.slice(0, 2).map(item => ({ ...item, type: 'link', icon: '🔗' }))
+                ...blogPosts.map(item => ({ ...item, type: 'blog', icon: '📝' })),
+                ...projects.map(item => ({ ...item, type: 'project', icon: '💼' })),
+                ...links.map(item => ({ ...item, type: 'link', icon: '🔗' })),
+                ...prompts.map(item => ({ ...item, type: 'prompt', icon: '✨' })),
+                ...videos.map(item => ({ ...item, type: 'video', icon: '🎥' }))
             ];
 
             // Sort by creation date
             allItems.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
-            setRecentItems(allItems.slice(0, 5));
+            setRecentItems(allItems.slice(0, 8));
         } catch (error) {
             console.error('Error loading dashboard data:', error);
         } finally {

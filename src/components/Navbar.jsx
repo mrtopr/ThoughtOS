@@ -4,6 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import LiveClock from './LiveClock';
 import ProfileModal from './ProfileModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
+import DailyToDoList from './DailyToDoList';
 import { auth } from '../utils/auth';
 import { useWorkspace } from '../contexts/WorkspaceContext';
 
@@ -12,6 +13,7 @@ export default function Navbar() {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [showToDoList, setShowToDoList] = useState(false);
     const userMenuRef = useRef(null);
     const { isSidebarOpen, setIsSidebarOpen } = useWorkspace();
 
@@ -139,6 +141,43 @@ export default function Navbar() {
                     {/* Live Clock */}
                     <div className="nav-desktop-only">
                         <LiveClock />
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{
+                        width: '1px',
+                        height: '24px',
+                        background: 'var(--border-color)',
+                        opacity: 0.5
+                    }} />
+
+                    {/* Daily To-Do List */}
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            className="todo-toggle-btn"
+                            onClick={() => setShowToDoList(!showToDoList)}
+                            style={{
+                                background: showToDoList ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '12px',
+                                width: '40px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                fontSize: '1.2rem',
+                                color: showToDoList ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                            }}
+                            title="Daily To-Do List"
+                        >
+                            {showToDoList ? '📝' : '✅'}
+                        </button>
+                        <DailyToDoList
+                            isOpen={showToDoList}
+                            onClose={() => setShowToDoList(false)}
+                        />
                     </div>
 
                     {/* Divider */}
