@@ -157,23 +157,134 @@ export default function Sidebar() {
                     })}
                 </nav>
 
-                {/* Footer Info */}
-                <div style={{
-                    padding: '0.85rem 1rem',
-                    borderTop: '1px solid var(--border-color)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.7rem',
-                    color: 'var(--text-tertiary)',
-                    textAlign: 'center',
-                    opacity: isExpanded ? 1 : 0,
-                    transition: 'opacity 0.2s ease',
-                    whiteSpace: 'nowrap',
-                    letterSpacing: '0.04em'
-                }}>
-                    THOUGHTOS · LOCAL
+                {/* Signature Footer */}
+                <div
+                    className="sidebar-signature-container"
+                    title="Crafted by Sachin"
+                    style={{
+                        padding: isExpanded ? '0.75rem 1rem 0.5rem' : '0.6rem 0',
+                        borderTop: '1px solid var(--border-color)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        userSelect: 'none',
+                        transition: 'all 0.25s ease',
+                        position: 'relative'
+                    }}
+                >
+                    {!isExpanded ? (
+                        /* Collapsed Monogram View */
+                        <div
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '8px',
+                                background: 'var(--bg-tertiary)',
+                                border: '1px solid var(--border-color)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                position: 'relative',
+                                cursor: 'default'
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontFamily: "'Mrs Saint Delafield', cursive",
+                                    fontSize: '1.45rem',
+                                    color: 'var(--accent-primary)',
+                                    lineHeight: 1,
+                                    transform: 'rotate(-2deg)'
+                                }}
+                            >
+                                S
+                            </span>
+                            <span
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '3px',
+                                    right: '3px',
+                                    width: '3.5px',
+                                    height: '3.5px',
+                                    borderRadius: '50%',
+                                    background: 'var(--accent-primary)',
+                                    boxShadow: '0 0 4px var(--accent-primary)'
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        /* Expanded Full Signature View */
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                textAlign: 'center',
+                                animation: 'fadeIn 0.25s ease-out'
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontFamily: 'var(--font-mono)',
+                                    fontSize: '0.6rem',
+                                    letterSpacing: '0.32em',
+                                    color: 'var(--text-tertiary)',
+                                    textTransform: 'uppercase',
+                                    marginBottom: '0.1rem'
+                                }}
+                            >
+                                Crafted by
+                            </span>
+                            <span
+                                className="sidebar-cursive-signature"
+                                style={{
+                                    fontFamily: "'Mrs Saint Delafield', cursive",
+                                    fontSize: '2.15rem',
+                                    color: 'var(--text-primary)',
+                                    lineHeight: 0.95,
+                                    transform: 'rotate(-3deg)',
+                                    display: 'inline-block',
+                                    letterSpacing: '0.03em',
+                                    padding: '0.15rem 0 0.25rem'
+                                }}
+                            >
+                                Sachin
+                            </span>
+                            {/* Signature Underline Flourish */}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    marginTop: '2px',
+                                    opacity: 0.75
+                                }}
+                            >
+                                <span style={{ width: '22px', height: '1px', background: 'var(--border-color)' }} />
+                                <span
+                                    style={{
+                                        width: '4px',
+                                        height: '4px',
+                                        borderRadius: '50%',
+                                        background: 'var(--accent-primary)',
+                                        boxShadow: '0 0 6px var(--accent-primary)'
+                                    }}
+                                />
+                                <span style={{ width: '22px', height: '1px', background: 'var(--border-color)' }} />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <style>{`
+                    .sidebar-cursive-signature:hover {
+                        color: var(--accent-primary) !important;
+                        text-shadow: 0 0 12px rgba(249, 115, 66, 0.35);
+                        transition: all 0.25s ease;
+                    }
+
                     .sidebar-link:hover {
                         background: var(--bg-tertiary) !important;
                         color: var(--text-primary) !important;
