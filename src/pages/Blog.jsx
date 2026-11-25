@@ -20,6 +20,13 @@ export default function Blog() {
 
     useEffect(() => {
         loadPosts();
+        const refresh = () => loadPosts();
+        window.addEventListener('workspaceDataUpdated', refresh);
+        window.addEventListener('workspaceChanged', refresh);
+        return () => {
+            window.removeEventListener('workspaceDataUpdated', refresh);
+            window.removeEventListener('workspaceChanged', refresh);
+        };
     }, []);
 
     const loadPosts = async () => {

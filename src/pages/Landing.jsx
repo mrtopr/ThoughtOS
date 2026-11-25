@@ -86,7 +86,7 @@ export default function Landing() {
                         A private digital workspace where everything you build, learn, and create lives in one place.
                     </p>
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/')}
                         className="cta-button hover-lift"
                         style={{
                             padding: '1.25rem 3rem',
@@ -329,7 +329,7 @@ export default function Landing() {
                         It just gives you a place to do it better.
                     </p>
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/')}
                         className="cta-button hover-lift"
                         style={{
                             padding: '1.25rem 3rem',

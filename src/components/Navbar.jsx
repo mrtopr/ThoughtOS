@@ -1,5 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import { CheckSquare, ChevronDown, UserCog, Layers, Menu, X, Settings } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 import ThemeToggle from './ThemeToggle';
 import LiveClock from './LiveClock';
 import ProfileModal from './ProfileModal';
@@ -31,9 +33,18 @@ export default function Navbar() {
         };
     }, []);
 
-    // Load user data on mount
+    // Load user data on mount & listen for profile updates
     useEffect(() => {
         loadUserData();
+        const handleProfileUpdate = (e) => {
+            if (e.detail) {
+                setCurrentUser(e.detail);
+            } else {
+                loadUserData();
+            }
+        };
+        window.addEventListener('profileUpdated', handleProfileUpdate);
+        return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
     }, []);
 
     const loadUserData = async () => {
@@ -41,28 +52,25 @@ export default function Navbar() {
         setCurrentUser(user);
     };
 
-    // Refresh user data after profile update
     const refreshUserData = async () => {
         await loadUserData();
     };
 
-    const handleLogout = async () => {
-        await auth.signOut();
-        navigate('/login');
-    };
+    const displayName = currentUser?.user_metadata?.display_name || 'Creator';
+    const bio = currentUser?.user_metadata?.bio || 'Local Workspace';
 
     return (
         <nav className="navbar animate-slide-down" style={{
             position: 'sticky',
             top: 0,
             zIndex: 99,
-            padding: '0.875rem 0',
-            borderBottom: '1px solid var(--glass-border)',
+            padding: '0.65rem 0',
+            borderBottom: '1px solid var(--border-color)',
             background: 'var(--bg-glass)',
-            backdropFilter: 'blur(20px)',
-            boxShadow: 'var(--shadow-sm)',
+            backdropFilter: 'blur(16px)',
+            boxShadow: 'none',
             marginLeft: 'var(--sidebar-width-collapsed)',
-            transition: 'margin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            transition: 'margin 0.28s cubic-bezier(0.22, 1, 0.36, 1)'
         }}>
             <div className="container" style={{
                 display: 'flex',
@@ -71,30 +79,31 @@ export default function Navbar() {
                 gap: '0.75rem',
                 paddingRight: '1.5rem'
             }}>
-                {/* Left Side: Hamburger and Brand (Mobile only) */}
-                <div className="navbar-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Left Side: Mobile Menu + Brand / Desktop Local Pill */}
+                <div className="navbar-left" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
                     <button
                         className="mobile-menu-toggle"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        aria-label="Toggle menu"
                         style={{
-                            background: 'transparent',
-                            border: 'none',
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-color)',
                             color: 'var(--text-primary)',
-                            fontSize: '1.5rem',
                             cursor: 'pointer',
                             display: 'none',
-                            padding: '0.5rem',
-                            borderRadius: '10px'
+                            padding: '0.45rem',
+                            borderRadius: '10px',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }}
                     >
-                        {isSidebarOpen ? '✕' : '☰'}
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
 
                     <Link
                         to="/"
                         className="mobile-brand"
-                        onClick={(e) => {
-                            // On mobile, if sidebar is closed, open it instead of just navigating (or do both)
+                        onClick={() => {
                             if (window.innerWidth <= 768) {
                                 setIsSidebarOpen(true);
                             }
@@ -102,37 +111,57 @@ export default function Navbar() {
                         style={{
                             display: 'none',
                             alignItems: 'center',
-                            gap: '0.5rem',
+                            gap: '0.45rem',
                             textDecoration: 'none',
-                            fontSize: '1.25rem',
+                            fontSize: '1.15rem',
                             fontWeight: '800',
-                            background: 'var(--accent-gradient)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
+                            color: 'var(--text-primary)'
                         }}
                     >
-                        <span>⚡</span>
-                        <span>ThoughtOS</span>
+                        <BrandLogo size={24} />
+                        <span style={{ fontFamily: 'var(--font-heading)' }}>ThoughtOS</span>
                     </Link>
+
+                    <div className="nav-desktop-only" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        padding: '0.32rem 0.75rem',
+                        borderRadius: '8px',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border-color)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.7rem',
+                        color: 'var(--text-secondary)',
+                        fontWeight: '500',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase'
+                    }}>
+                        <span style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            background: 'var(--success)'
+                        }} />
+                        <span>Local Storage</span>
+                    </div>
                 </div>
 
-                {/* Right Side: Existing Controls */}
+                {/* Right Side: Controls */}
                 <div className="navbar-right" style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem'
+                    gap: '0.65rem'
                 }}>
                     {/* Workspace Switcher */}
                     <div className="nav-desktop-only">
                         <WorkspaceSwitcher />
                     </div>
 
-                    {/* Divider */}
                     <div className="nav-desktop-only" style={{
                         width: '1px',
-                        height: '24px',
-                        background: 'var(--border-color)',
-                        opacity: 0.5
+                        height: '20px',
+                        background: 'var(--border-color-strong)'
                     }} />
 
                     {/* Theme Toggle */}
@@ -143,36 +172,55 @@ export default function Navbar() {
                         <LiveClock />
                     </div>
 
-                    {/* Divider */}
                     <div style={{
                         width: '1px',
-                        height: '24px',
-                        background: 'var(--border-color)',
-                        opacity: 0.5
+                        height: '20px',
+                        background: 'var(--border-color-strong)'
                     }} />
+
+                    {/* Settings Quick Button */}
+                    <button
+                        className="nav-icon-btn"
+                        onClick={() => setShowProfileModal(true)}
+                        style={{
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-color-strong)',
+                            borderRadius: '10px',
+                            width: '38px',
+                            height: '38px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            color: 'var(--text-secondary)'
+                        }}
+                        title="Profile & Settings"
+                    >
+                        <Settings size={17} strokeWidth={2} />
+                    </button>
 
                     {/* Daily To-Do List */}
                     <div style={{ position: 'relative' }}>
                         <button
-                            className="todo-toggle-btn"
+                            className="todo-toggle-btn nav-icon-btn"
                             onClick={() => setShowToDoList(!showToDoList)}
                             style={{
                                 background: showToDoList ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '12px',
-                                width: '40px',
-                                height: '40px',
+                                border: showToDoList ? '1px solid var(--accent-primary)' : '1px solid var(--border-color-strong)',
+                                borderRadius: '10px',
+                                width: '38px',
+                                height: '38px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
-                                transition: 'all 0.3s ease',
-                                fontSize: '1.2rem',
+                                transition: 'all 0.2s ease',
                                 color: showToDoList ? 'var(--accent-primary)' : 'var(--text-secondary)'
                             }}
                             title="Daily To-Do List"
                         >
-                            {showToDoList ? '📝' : '✅'}
+                            <CheckSquare size={18} strokeWidth={2} />
                         </button>
                         <DailyToDoList
                             isOpen={showToDoList}
@@ -180,48 +228,47 @@ export default function Navbar() {
                         />
                     </div>
 
-                    {/* Divider */}
                     <div style={{
                         width: '1px',
-                        height: '24px',
-                        background: 'var(--border-color)',
-                        opacity: 0.5
+                        height: '20px',
+                        background: 'var(--border-color-strong)'
                     }} />
 
                     {/* User Menu */}
                     <div ref={userMenuRef} style={{ position: 'relative' }}>
                         <button
                             onClick={() => setShowUserMenu(!showUserMenu)}
+                            className="nav-user-btn"
                             style={{
                                 background: showUserMenu ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '50px',
-                                padding: '0.5rem 1rem',
+                                border: '1px solid var(--border-color-strong)',
+                                borderRadius: '999px',
+                                padding: '0.32rem 0.75rem 0.32rem 0.35rem',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.625rem',
-                                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                gap: '0.55rem',
+                                transition: 'all 0.2s ease',
                                 boxShadow: showUserMenu ? 'var(--shadow-md)' : 'none'
                             }}
                         >
                             <span style={{
-                                width: '28px',
-                                height: '28px',
+                                width: '26px',
+                                height: '26px',
                                 borderRadius: '50%',
-                                background: 'var(--accent-gradient)',
+                                background: 'var(--text-primary)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: 'white',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                color: 'var(--bg-secondary)',
                                 flexShrink: 0
                             }}>
-                                {(currentUser?.user_metadata?.display_name || currentUser?.email || 'U').charAt(0).toUpperCase()}
+                                {displayName.charAt(0).toUpperCase()}
                             </span>
                             <span className="nav-username" style={{
-                                fontSize: '0.875rem',
+                                fontSize: '0.85rem',
                                 color: 'var(--text-primary)',
                                 fontWeight: '500',
                                 maxWidth: '120px',
@@ -229,117 +276,112 @@ export default function Navbar() {
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
                             }}>
-                                {currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'User'}
+                                {displayName}
                             </span>
-                            <svg
+                            <ChevronDown
                                 className="nav-chevron"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 16 16"
-                                fill="none"
+                                size={14}
                                 style={{
-                                    transition: 'transform 0.3s ease',
+                                    color: 'var(--text-secondary)',
+                                    transition: 'transform 0.2s ease',
                                     transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)',
                                     flexShrink: 0
                                 }}
-                            >
-                                <path
-                                    d="M4 6L8 10L12 6"
-                                    stroke="var(--text-secondary)"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
+                            />
                         </button>
 
                         {/* Dropdown */}
                         {showUserMenu && (
                             <div className="animate-scale-in" style={{
                                 position: 'absolute',
-                                top: 'calc(100% + 0.75rem)',
+                                top: 'calc(100% + 0.65rem)',
                                 right: 0,
-                                background: 'var(--bg-glass)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-glass-strong)',
+                                backdropFilter: 'blur(24px)',
+                                border: '1px solid var(--glass-border-strong)',
                                 borderRadius: '16px',
-                                padding: '0.5rem',
-                                minWidth: '220px',
+                                padding: '0.45rem',
+                                minWidth: '230px',
                                 boxShadow: 'var(--shadow-xl)',
                                 zIndex: 1000
                             }}>
                                 <div style={{
-                                    padding: '1rem',
+                                    padding: '0.75rem 0.9rem',
                                     borderBottom: '1px solid var(--border-color)',
-                                    marginBottom: '0.5rem'
+                                    marginBottom: '0.35rem'
                                 }}>
                                     <div style={{
                                         fontWeight: '600',
-                                        marginBottom: '0.375rem',
+                                        marginBottom: '0.15rem',
                                         color: 'var(--text-primary)',
-                                        fontSize: '0.95rem'
+                                        fontSize: '0.92rem'
                                     }}>
-                                        {currentUser?.user_metadata?.display_name || 'User'}
+                                        {displayName}
                                     </div>
                                     <div style={{
-                                        fontSize: '0.8rem',
+                                        fontSize: '0.76rem',
                                         color: 'var(--text-tertiary)',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap'
                                     }}>
-                                        {currentUser?.email}
+                                        {bio}
                                     </div>
                                 </div>
 
                                 <button
+                                    className="nav-dropdown-item"
                                     onClick={() => {
                                         setShowProfileModal(true);
                                         setShowUserMenu(false);
                                     }}
                                     style={{
                                         width: '100%',
-                                        padding: '0.75rem 1rem',
+                                        padding: '0.65rem 0.85rem',
                                         background: 'transparent',
                                         border: 'none',
-                                        borderRadius: '12px',
+                                        borderRadius: '10px',
                                         cursor: 'pointer',
                                         textAlign: 'left',
                                         color: 'var(--text-primary)',
                                         fontWeight: '500',
-                                        fontSize: '0.875rem',
-                                        transition: 'all 0.2s ease',
-                                        marginBottom: '0.25rem',
+                                        fontSize: '0.85rem',
+                                        transition: 'all 0.15s ease',
+                                        marginBottom: '0.2rem',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '0.75rem'
+                                        gap: '0.65rem'
                                     }}
                                 >
-                                    <span style={{ fontSize: '1.125rem' }}>✏️</span>
-                                    <span>Edit Profile</span>
+                                    <UserCog size={16} style={{ color: 'var(--accent-primary)' }} />
+                                    <span>Profile & Backup</span>
                                 </button>
 
                                 <button
-                                    onClick={handleLogout}
+                                    className="nav-dropdown-item"
+                                    onClick={() => {
+                                        navigate('/workspaces');
+                                        setShowUserMenu(false);
+                                    }}
                                     style={{
                                         width: '100%',
-                                        padding: '0.75rem 1rem',
+                                        padding: '0.65rem 0.85rem',
                                         background: 'transparent',
                                         border: 'none',
-                                        borderRadius: '12px',
+                                        borderRadius: '10px',
                                         cursor: 'pointer',
                                         textAlign: 'left',
-                                        color: 'var(--error)',
+                                        color: 'var(--text-primary)',
                                         fontWeight: '500',
-                                        fontSize: '0.875rem',
-                                        transition: 'all 0.2s ease',
+                                        fontSize: '0.85rem',
+                                        transition: 'all 0.15s ease',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '0.75rem'
+                                        gap: '0.65rem'
                                     }}
                                 >
-                                    <span style={{ fontSize: '1.125rem' }}>🚪</span>
-                                    <span>Logout</span>
+                                    <Layers size={16} style={{ color: 'var(--accent-secondary)' }} />
+                                    <span>Manage Workspaces</span>
                                 </button>
                             </div>
                         )}
@@ -356,6 +398,12 @@ export default function Navbar() {
             />
 
             <style>{`
+                .nav-dropdown-item:hover {
+                    background: var(--bg-tertiary) !important;
+                }
+                .nav-icon-btn:hover, .nav-user-btn:hover {
+                    border-color: var(--accent-primary) !important;
+                }
                 @media (max-width: 768px) {
                     .navbar {
                         margin-left: 0 !important;
@@ -367,7 +415,7 @@ export default function Navbar() {
                         display: none !important;
                     }
                     .navbar-right {
-                        gap: 0.5rem !important;
+                        gap: 0.45rem !important;
                     }
                 }
             `}</style>

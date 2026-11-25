@@ -4,19 +4,17 @@ import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import DynamicBackground from './components/DynamicBackground';
-import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
-import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Links from './pages/Links';
 import Projects from './pages/Projects';
 import Blog from './pages/Blog';
 import Prompts from './pages/Prompts';
 import Videos from './pages/Videos';
+import Analytics from './pages/Analytics';
 import WorkspaceManager from './pages/WorkspaceManager';
-import ResetPassword from './pages/ResetPassword';
+import ChatbotContainer from './components/Chatbot/ChatbotContainer';
 import { themeStorage } from './utils/storage';
-import { auth } from './utils/auth';
 import './styles/index.css';
 import './styles/theme.css';
 import './styles/components.css';
@@ -35,14 +33,14 @@ function App() {
         <div className="app" style={{ minHeight: '100vh', background: 'transparent' }}>
           <DynamicBackground />
           <Routes>
-            {/* Public Routes */}
+            {/* Public / Marketing Route */}
             <Route path="/landing" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/reset-password" element={<Navigate to="/" replace />} />
 
-            {/* Protected Routes */}
+            {/* Direct Workspace Routes (No Login Required) */}
             <Route path="/*" element={
-              <ProtectedRoute>
+              <>
                 <Sidebar />
                 <Navbar />
                 <main className="main-content" style={{
@@ -57,6 +55,7 @@ function App() {
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/prompts" element={<Prompts />} />
                     <Route path="/videos" element={<Videos />} />
+                    <Route path="/analytics" element={<Analytics />} />
                     <Route path="/workspaces" element={<WorkspaceManager />} />
                   </Routes>
                   <style>{`
@@ -68,9 +67,10 @@ function App() {
                     }
                   `}</style>
                 </main>
-              </ProtectedRoute>
+              </>
             } />
           </Routes>
+          <ChatbotContainer />
         </div>
       </Router>
     </WorkspaceProvider>

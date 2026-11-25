@@ -88,8 +88,8 @@ export const geminiAI = {
         }
 
         const apiKey = this.getApiKey();
-        if (!apiKey) {
-            throw new Error('API key not configured. Please set your Gemini API key in settings.');
+        if (!apiKey || apiKey.length < 15) {
+            return localRewrite(content, mode);
         }
 
         // Prepare the prompt
@@ -116,46 +116,30 @@ export const geminiAI = {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-
-                if (response.status === 400) {
-                    throw new Error('Invalid API key or request. Please check your Gemini API key.');
-                } else if (response.status === 429) {
-                    throw new Error('Rate limit exceeded. Please try again in a moment.');
-                } else if (response.status === 500) {
-                    throw new Error('Gemini AI service error. Please try again later.');
-                } else {
-                    throw new Error(errorData.error?.message || `API error: ${response.status}`);
-                }
+                console.warn('Gemini rewrite unavailable, falling back to local rewriter:', response.status);
+                return localRewrite(content, mode);
             }
 
             const data = await response.json();
 
             if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                throw new Error('Invalid response from Gemini AI');
+                return localRewrite(content, mode);
             }
 
             let rewrittenContent = data.candidates[0].content.parts[0].text.trim();
 
-            // Clean up the response: remove markdown bolding, quotes, etc.
-            // Often models return **text** or "text"
             rewrittenContent = rewrittenContent
-                .replace(/^\*\*+|\*\*+$/g, '') // Remove leading/trailing **
-                .replace(/^"+|"+$/g, '')       // Remove leading/trailing double quotes
-                .replace(/^'+|'+$/g, '')       // Remove leading/trailing single quotes
-                .replace(/\*\*/g, '')          // Remove any remaining double asterisks
+                .replace(/^\*\*+|\*\*+$/g, '')
+                .replace(/^"+|"+$/g, '')
+                .replace(/^'+|'+$/g, '')
+                .replace(/\*\*/g, '')
                 .trim();
 
             return rewrittenContent;
 
         } catch (error) {
-            // Network errors
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                throw new Error('Network error. Please check your internet connection.');
-            }
-
-            // Re-throw other errors
-            throw error;
+            console.warn('Gemini rewrite error, falling back to local rewriter:', error);
+            return localRewrite(content, mode);
         }
     },
 
@@ -176,3 +160,131 @@ export const geminiAI = {
 };
 
 export default geminiAI;
+
+function applyReplacements(text, pairs) {
+    let out = text;
+    for (const [pattern, replacement] of pairs) {
+        out = out.replace(pattern, replacement);
+    }
+    return out;
+}
+
+function fixCapitalizationAndPunctuation(text) {
+    let out = text
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\s+([.,!?;:])/g, '$1')
+        .replace(/\bi\b/g, 'I')
+        .trim();
+
+    // Capitalize first letter and letters after sentence-ending punctuation
+    out = out.replace(/(^\s*[a-z])|([.!?]\s+[a-z])/g, (m) => m.toUpperCase());
+
+    if (out.length > 0 && !/[.!?]$/.test(out)) {
+        out += '.';
+    }
+    return out;
+}
+
+function localRewrite(content, mode) {
+    let text = content.trim();
+
+    switch (mode) {
+        case 'fix-grammar': {
+            text = applyReplacements(text, [
+                [/\bteh\b/gi, 'the'],
+                [/\brecieve\b/gi, 'receive'],
+                [/\bseperate\b/gi, 'separate'],
+                [/\boccured\b/gi, 'occurred'],
+                [/\bdefinately\b/gi, 'definitely'],
+                [/\balot\b/gi, 'a lot'],
+                [/\bim\b/gi, "I'm"],
+                [/\bive\b/gi, "I've"],
+                [/\bdont\b/gi, "don't"],
+                [/\bcant\b/gi, "can't"],
+                [/\bwont\b/gi, "won't"],
+                [/\bdidnt\b/gi, "didn't"],
+                [/\bisnt\b/gi, "isn't"]
+            ]);
+            return fixCapitalizationAndPunctuation(text);
+        }
+
+        case 'professional': {
+            text = applyReplacements(text, [
+                [/\bdon't\b/gi, 'do not'],
+                [/\bcan't\b/gi, 'cannot'],
+                [/\bwon't\b/gi, 'will not'],
+                [/\bit's\b/gi, 'it is'],
+                [/\bi'm\b/gi, 'I am'],
+                [/\bgonna\b/gi, 'going to'],
+                [/\bwanna\b/gi, 'want to'],
+                [/\bkinda\b/gi, 'somewhat'],
+                [/\bstuff\b/gi, 'materials'],
+                [/\bthings\b/gi, 'elements'],
+                [/\bawesome\b/gi, 'exceptional'],
+                [/\bcool\b/gi, 'effective'],
+                [/\bgot\b/gi, 'obtained'],
+                [/\bget\b/gi, 'obtain'],
+                [/\bhelp\b/gi, 'assist']
+            ]);
+            return fixCapitalizationAndPunctuation(text);
+        }
+
+        case 'concise': {
+            text = applyReplacements(text, [
+                [/\bin order to\b/gi, 'to'],
+                [/\bdue to the fact that\b/gi, 'because'],
+                [/\bat this point in time\b/gi, 'now'],
+                [/\bin my opinion,?\s*/gi, ''],
+                [/\bI think that\s*/gi, ''],
+                [/\bthat is to say,?\s*/gi, ''],
+                [/\b(basically|actually|literally|really|very|simply|just)\b\s*/gi, '']
+            ]);
+            return fixCapitalizationAndPunctuation(text);
+        }
+
+        case 'casual': {
+            text = applyReplacements(text, [
+                [/\bdo not\b/gi, "don't"],
+                [/\bcannot\b/gi, "can't"],
+                [/\bwill not\b/gi, "won't"],
+                [/\bit is\b/gi, "it's"],
+                [/\btherefore\b/gi, 'so'],
+                [/\bhowever\b/gi, 'but'],
+                [/\butilize\b/gi, 'use'],
+                [/\bassistance\b/gi, 'help'],
+                [/\bregarding\b/gi, 'about'],
+                [/\badditional\b/gi, 'more']
+            ]);
+            return fixCapitalizationAndPunctuation(text);
+        }
+
+        case 'creative': {
+            text = applyReplacements(text, [
+                [/\bgood\b/gi, 'remarkable'],
+                [/\bbig\b/gi, 'expansive'],
+                [/\bfast\b/gi, 'rapid'],
+                [/\bnice\b/gi, 'captivating'],
+                [/\bimportant\b/gi, 'pivotal'],
+                [/\bmake\b/gi, 'craft'],
+                [/\bshow\b/gi, 'illuminate'],
+                [/\buse\b/gi, 'harness'],
+                [/\bstart\b/gi, 'launch']
+            ]);
+            return fixCapitalizationAndPunctuation(text);
+        }
+
+        case 'expand': {
+            const clean = fixCapitalizationAndPunctuation(text);
+            const sentences = clean.split(/(?<=[.!?])\s+/).filter(Boolean);
+            if (sentences.length === 1) {
+                return `${sentences[0]} In practice, this highlights the key context and allows for clearer follow-through.`;
+            }
+            return sentences
+                .map((s, idx) => (idx === 0 ? s : `Additionally, ${s.charAt(0).toLowerCase()}${s.slice(1)}`))
+                .join(' ');
+        }
+
+        default:
+            return fixCapitalizationAndPunctuation(text);
+    }
+}

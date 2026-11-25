@@ -1,5 +1,5 @@
 /* Global Styles and Reset */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap');
 
 * {
     margin: 0;
@@ -13,7 +13,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-body, 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif);
     background: var(--bg-primary);
     background-attachment: fixed;
     color: var(--text-primary);
@@ -24,89 +24,75 @@ body {
     min-height: 100vh;
 }
 
-code,
-pre {
-    font-family: 'JetBrains Mono', monospace;
+h1, h2, h3, h4 {
+    font-family: var(--font-heading, 'Syne', sans-serif);
+    letter-spacing: -0.025em;
 }
 
-/* Buttons */
+code,
+pre {
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Tactile Architectural Buttons */
 .btn {
-    padding: 0.875rem 1.75rem;
-    border-radius: 14px;
+    padding: 0.72rem 1.45rem;
+    border-radius: 999px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.88rem;
+    letter-spacing: -0.01em;
     cursor: pointer;
-    border: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    transition: transform 0.16s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     text-decoration: none;
     position: relative;
-    overflow: hidden;
 }
 
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.4s ease, height 0.4s ease;
-}
-
-.btn:hover::before {
-    width: 300px;
-    height: 300px;
+.btn:active {
+    transform: scale(0.97) !important;
 }
 
 .btn-primary {
-    background: var(--accent-gradient);
-    color: white;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    background: var(--text-primary);
+    color: var(--bg-secondary);
+    border-color: var(--text-primary);
+    box-shadow: none;
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-    color: white;
-}
-
-.btn-primary:active {
-    transform: translateY(0);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(232, 93, 44, 0.24);
 }
 
 .btn-secondary {
-    background: var(--bg-tertiary);
+    background: transparent;
     color: var(--text-primary);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color-strong);
 }
 
 .btn-secondary:hover {
-    background: var(--bg-secondary);
-    border-color: var(--accent-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: var(--bg-tertiary);
+    border-color: var(--text-primary);
+    transform: translateY(-1px);
 }
 
 .btn-glass {
-    background: var(--bg-glass);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: var(--bg-secondary);
     color: var(--text-primary);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-color-strong);
 }
 
 .btn-glass:hover {
-    background: rgba(255, 255, 255, 0.15);
     border-color: var(--accent-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    color: var(--accent-primary);
+    transform: translateY(-1px);
 }
 
 /* Typography */
@@ -384,4 +370,23 @@ a:hover {
 ::-moz-selection {
     background: var(--accent-primary);
     color: white;
+}
+
+/* Sleek Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(129, 140, 248, 0.25);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(129, 140, 248, 0.5);
 }

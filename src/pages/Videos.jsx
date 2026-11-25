@@ -14,6 +14,13 @@ export default function Videos() {
 
     useEffect(() => {
         loadVideos();
+        const refresh = () => loadVideos();
+        window.addEventListener('workspaceDataUpdated', refresh);
+        window.addEventListener('workspaceChanged', refresh);
+        return () => {
+            window.removeEventListener('workspaceDataUpdated', refresh);
+            window.removeEventListener('workspaceChanged', refresh);
+        };
     }, []);
 
     const loadVideos = async () => {

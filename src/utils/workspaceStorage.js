@@ -1,217 +1,169 @@
-// Workspace management for multi-workspace support
-import { supabase } from './supabaseClient';
+// LocalStorage-backed workspace management for multi-workspace support
 
-// Helper to get current user ID
-const getCurrentUserId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id;
+const WORKSPACES_KEY = 'thoughtos_workspaces';
+const CURRENT_WORKSPACE_KEY = 'current_workspace_id';
+
+const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return `ws_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 };
 
-// Workspace storage key for current workspace
-const CURRENT_WORKSPACE_KEY = 'current_workspace_id';
+const readWorkspaces = () => {
+    try {
+        const raw = localStorage.getItem(WORKSPACES_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error('Error reading workspaces from localStorage:', error);
+        return [];
+    }
+};
+
+const writeWorkspaces = (workspaces) => {
+    try {
+        localStorage.setItem(WORKSPACES_KEY, JSON.stringify(workspaces));
+        return true;
+    } catch (error) {
+        console.error('Error saving workspaces to localStorage:', error);
+        return false;
+    }
+};
+
+const ensureDefaultWorkspace = () => {
+    let all = readWorkspaces();
+    if (all.length === 0) {
+        const personal = {
+            id: 'ws-personal',
+            name: 'Personal',
+            type: 'personal',
+            icon: '👤',
+            color: '#e85d2c',
+            is_default: true,
+            is_archived: false,
+            created_at: new Date().toISOString()
+        };
+        all = [personal];
+        writeWorkspaces(all);
+        localStorage.setItem(CURRENT_WORKSPACE_KEY, personal.id);
+    }
+    return all;
+};
 
 export const workspaceStorage = {
     /**
-     * Get all workspaces for the current user
+     * Get all active (non-archived) workspaces
      */
     getAll: async () => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) return [];
-
-            const { data, error } = await supabase
-                .from('workspaces')
-                .select('*')
-                .eq('user_id', userId)
-                .or('is_archived.is.null,is_archived.eq.false')
-                .order('created_at', { ascending: true });
-
-            if (error) throw error;
-            return data || [];
-        } catch (error) {
-            console.error('Error fetching workspaces:', error);
-            return [];
-        }
+        const all = ensureDefaultWorkspace();
+        return all.filter(w => !w.is_archived);
     },
 
     /**
-     * Get archived workspaces for the current user
+     * Get archived workspaces
      */
     getArchived: async () => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) return [];
-
-            const { data, error } = await supabase
-                .from('workspaces')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('is_archived', true)
-                .order('created_at', { ascending: true });
-
-            if (error) throw error;
-            return data || [];
-        } catch (error) {
-            console.error('Error fetching archived workspaces:', error);
-            return [];
-        }
+        const all = readWorkspaces();
+        return all.filter(w => w.is_archived === true);
     },
 
     /**
      * Get a specific workspace by ID
      */
     getById: async (id) => {
-        try {
-            const { data, error } = await supabase
-                .from('workspaces')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error fetching workspace:', error);
-            return null;
-        }
+        const all = ensureDefaultWorkspace();
+        return all.find(w => w.id === id) || null;
     },
 
     /**
      * Create a new workspace
      */
     create: async (workspace) => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) throw new Error('User not authenticated');
+        const all = ensureDefaultWorkspace();
+        const newWorkspace = {
+            id: generateId(),
+            name: workspace.name,
+            type: workspace.type || 'custom',
+            icon: workspace.icon || '📁',
+            color: workspace.color || '#6366f1',
+            is_default: workspace.is_default || false,
+            is_archived: false,
+            created_at: new Date().toISOString()
+        };
 
-            const { data, error } = await supabase
-                .from('workspaces')
-                .insert([{
-                    user_id: userId,
-                    name: workspace.name,
-                    type: workspace.type || 'custom',
-                    icon: workspace.icon || '📁',
-                    color: workspace.color || '#6366f1',
-                    is_default: workspace.is_default || false
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error creating workspace:', error);
-            throw error;
+        if (newWorkspace.is_default) {
+            all.forEach(w => { w.is_default = false; });
         }
+
+        all.push(newWorkspace);
+        writeWorkspaces(all);
+        return newWorkspace;
     },
 
     /**
      * Update a workspace
      */
     update: async (id, updates) => {
-        try {
-            const { data, error } = await supabase
-                .from('workspaces')
-                .update(updates)
-                .eq('id', id)
-                .select()
-                .single();
+        const all = ensureDefaultWorkspace();
+        const index = all.findIndex(w => w.id === id);
+        if (index === -1) throw new Error('Workspace not found');
 
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error updating workspace:', error);
-            throw error;
-        }
+        all[index] = {
+            ...all[index],
+            ...updates,
+            updated_at: new Date().toISOString()
+        };
+        writeWorkspaces(all);
+        return all[index];
     },
 
     /**
      * Delete a workspace
      */
     delete: async (id) => {
-        try {
-            const { error } = await supabase
-                .from('workspaces')
-                .delete()
-                .eq('id', id);
+        const all = ensureDefaultWorkspace();
+        const filtered = all.filter(w => w.id !== id);
+        writeWorkspaces(filtered);
 
-            if (error) throw error;
-
-            // Clear current workspace if it was deleted
-            const currentId = workspaceStorage.getCurrentWorkspaceId();
-            if (currentId === id) {
-                localStorage.removeItem(CURRENT_WORKSPACE_KEY);
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error deleting workspace:', error);
-            throw error;
+        const currentId = workspaceStorage.getCurrentWorkspaceId();
+        if (currentId === id) {
+            localStorage.removeItem(CURRENT_WORKSPACE_KEY);
         }
+        return true;
     },
 
     /**
      * Get the default workspace
      */
     getDefault: async () => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) return null;
-
-            const { data, error } = await supabase
-                .from('workspaces')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('is_default', true)
-                .single();
-
-            if (error) {
-                // If no default workspace exists, return the first one
-                const workspaces = await workspaceStorage.getAll();
-                return workspaces[0] || null;
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Error fetching default workspace:', error);
-            return null;
-        }
+        const active = await workspaceStorage.getAll();
+        return active.find(w => w.is_default) || active[0] || null;
     },
 
     /**
      * Set a workspace as default
      */
     setDefault: async (id) => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) throw new Error('User not authenticated');
-
-            // First, unset all defaults for this user
-            await supabase
-                .from('workspaces')
-                .update({ is_default: false })
-                .eq('user_id', userId);
-
-            // Then set the new default
-            const { data, error } = await supabase
-                .from('workspaces')
-                .update({ is_default: true })
-                .eq('id', id)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error setting default workspace:', error);
-            throw error;
-        }
+        const all = ensureDefaultWorkspace();
+        let updated = null;
+        const next = all.map(w => {
+            if (w.id === id) {
+                updated = { ...w, is_default: true };
+                return updated;
+            }
+            return { ...w, is_default: false };
+        });
+        writeWorkspaces(next);
+        return updated;
     },
 
     /**
      * Get current workspace ID from localStorage
      */
     getCurrentWorkspaceId: () => {
+        ensureDefaultWorkspace();
         return localStorage.getItem(CURRENT_WORKSPACE_KEY);
     },
 
@@ -227,46 +179,26 @@ export const workspaceStorage = {
      */
     getCurrentWorkspace: async () => {
         const id = workspaceStorage.getCurrentWorkspaceId();
-        if (!id) {
-            // If no current workspace, get default
-            const defaultWorkspace = await workspaceStorage.getDefault();
-            if (defaultWorkspace) {
-                workspaceStorage.setCurrentWorkspaceId(defaultWorkspace.id);
-                return defaultWorkspace;
+        if (id) {
+            const found = await workspaceStorage.getById(id);
+            if (found && !found.is_archived) {
+                return found;
             }
-            return null;
         }
-        return await workspaceStorage.getById(id);
+        const defaultWorkspace = await workspaceStorage.getDefault();
+        if (defaultWorkspace) {
+            workspaceStorage.setCurrentWorkspaceId(defaultWorkspace.id);
+            return defaultWorkspace;
+        }
+        return null;
     },
 
     /**
-     * Initialize workspace for a new user
-     * Creates a default "Personal" workspace
+     * Initialize workspace (ensures default Personal workspace exists)
      */
     initializeForUser: async () => {
-        try {
-            const workspaces = await workspaceStorage.getAll();
-
-            // If user already has workspaces, do nothing
-            if (workspaces.length > 0) {
-                return workspaces[0];
-            }
-
-            // Create default Personal workspace
-            const personalWorkspace = await workspaceStorage.create({
-                name: 'Personal',
-                type: 'personal',
-                icon: '👤',
-                color: '#6366f1',
-                is_default: true
-            });
-
-            workspaceStorage.setCurrentWorkspaceId(personalWorkspace.id);
-            return personalWorkspace;
-        } catch (error) {
-            console.error('Error initializing workspace:', error);
-            throw error;
-        }
+        const all = await workspaceStorage.getAll();
+        return all[0];
     },
 
     /**
@@ -274,10 +206,10 @@ export const workspaceStorage = {
      */
     getPresetTypes: () => {
         return [
-            { value: 'personal', label: 'Personal', icon: '👤', color: '#6366f1' },
-            { value: 'youtube', label: 'YouTube', icon: '🎥', color: '#ff0000' },
-            { value: 'college', label: 'College', icon: '🎓', color: '#10b981' },
-            { value: 'custom', label: 'Custom', icon: '📁', color: '#8b5cf6' }
+            { value: 'personal', label: 'Personal', icon: '👤', color: '#e85d2c' },
+            { value: 'youtube', label: 'YouTube', icon: '🎥', color: '#dc2626' },
+            { value: 'college', label: 'College', icon: '🎓', color: '#16a34a' },
+            { value: 'custom', label: 'Custom', icon: '📁', color: '#111111' }
         ];
     }
 };

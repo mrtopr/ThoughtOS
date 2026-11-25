@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Target, Coffee, Play, Pause, RotateCcw, Bell } from 'lucide-react';
 
 export default function FocusTimer() {
     const defaultStudyTime = 25;
@@ -13,7 +14,6 @@ export default function FocusTimer() {
     const [showAlarm, setShowAlarm] = useState(false);
     const audioRef = useRef(null);
 
-    // Track total seconds for progress calculation
     const totalSecondsRemaining = minutes * 60 + seconds;
 
     useEffect(() => {
@@ -39,10 +39,9 @@ export default function FocusTimer() {
         if (mode === 'study') {
             setSessions(s => s + 1);
         }
-        // Play alarm sound
         if (audioRef.current) {
             audioRef.current.loop = true;
-            audioRef.current.play();
+            audioRef.current.play().catch(() => {});
         }
     };
 
@@ -52,7 +51,6 @@ export default function FocusTimer() {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
         }
-        // Switch modes
         if (mode === 'study') {
             setMode('break');
             setMinutes(defaultBreakTime);
@@ -84,80 +82,75 @@ export default function FocusTimer() {
     };
 
     const addTime = (amt) => {
-        const newMinutes = minutes + amt;
+        const newMinutes = Math.max(1, minutes + amt);
         setMinutes(newMinutes);
-        setInitialTime(prev => prev + (amt * 60));
+        setInitialTime(Math.max(60, initialTime + (amt * 60)));
     };
 
     const progress = initialTime > 0 ? ((initialTime - totalSecondsRemaining) / initialTime) * 100 : 0;
+    const accentColor = mode === 'study' ? 'var(--accent-primary)' : 'var(--success)';
 
     return (
-        <div className="glass-strong animate-scale-in" style={{
-            padding: '2rem',
-            borderRadius: '32px',
+        <div className="animate-scale-in" style={{
+            padding: '1.75rem',
+            borderRadius: '16px',
             textAlign: 'center',
             width: '100%',
-            maxWidth: '350px',
-            margin: '0 auto',
-            border: '1px solid var(--glass-border-strong)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-sm)',
             position: 'relative',
             overflow: 'hidden',
-            minHeight: '400px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center'
         }}>
-            {/* Background Glow */}
-            <div style={{
-                position: 'absolute',
-                top: '-50%',
-                left: '-50%',
-                width: '200%',
-                height: '200%',
-                background: mode === 'study' ? 'var(--accent-gradient)' : 'var(--accent-gradient-3)',
-                opacity: 0.05,
-                zIndex: 0,
-                pointerEvents: 'none'
-            }} />
-
             <div style={{ position: 'relative', zIndex: 1 }}>
-                <h3 style={{
-                    fontSize: '0.9rem',
+                {/* Mode Header */}
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '6px',
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.15em',
-                    color: mode === 'study' ? 'var(--accent-primary)' : 'var(--success)',
-                    marginBottom: '1.5rem',
-                    fontWeight: '800'
+                    letterSpacing: '0.08em',
+                    color: accentColor,
+                    marginBottom: '1.25rem',
+                    fontWeight: '600'
                 }}>
-                    {mode === 'study' ? '🎯 Deep Focus' : '☕ Quick Break'}
-                </h3>
+                    {mode === 'study' ? <Target size={13} /> : <Coffee size={13} />}
+                    <span>{mode === 'study' ? 'Deep Focus' : 'Quick Break'}</span>
+                </div>
 
                 {/* Progress Ring Container */}
                 <div style={{
                     position: 'relative',
-                    width: '180px',
-                    height: '180px',
-                    margin: '0 auto 1.5rem'
+                    width: '168px',
+                    height: '168px',
+                    margin: '0 auto 1.25rem'
                 }}>
                     <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
                         <circle
-                            cx="50" cy="50" r="45"
+                            cx="50" cy="50" r="44"
                             fill="none"
-                            stroke="var(--border-color)"
-                            strokeWidth="3"
-                            style={{ opacity: 0.3 }}
+                            stroke="var(--border-color-strong)"
+                            strokeWidth="2.5"
                         />
                         <circle
-                            cx="50" cy="50" r="45"
+                            cx="50" cy="50" r="44"
                             fill="none"
-                            stroke={mode === 'study' ? 'var(--accent-primary)' : 'var(--success)'}
-                            strokeWidth="4"
-                            strokeDasharray="283"
-                            strokeDashoffset={283 - (283 * progress) / 100}
+                            stroke={accentColor}
+                            strokeWidth="3.5"
+                            strokeDasharray="276.46"
+                            strokeDashoffset={276.46 - (276.46 * progress) / 100}
                             strokeLinecap="round"
                             style={{
-                                transition: isActive ? 'stroke-dashoffset 1s linear' : 'stroke-dashoffset 0.4s ease',
-                                filter: `drop-shadow(0 0 8px ${mode === 'study' ? 'var(--accent-primary)' : 'var(--success)'}40)`
+                                transition: isActive ? 'stroke-dashoffset 1s linear' : 'stroke-dashoffset 0.35s ease'
                             }}
                         />
                     </svg>
@@ -166,11 +159,13 @@ export default function FocusTimer() {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        fontSize: '3.25rem',
-                        fontWeight: '800',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '2.35rem',
+                        fontWeight: '600',
                         color: 'var(--text-primary)',
-                        fontFamily: 'var(--font-heading)',
-                        letterSpacing: '-2px'
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: '-0.03em',
+                        lineHeight: 1
                     }}>
                         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                     </div>
@@ -178,24 +173,32 @@ export default function FocusTimer() {
 
                 {/* Custom Time Controls */}
                 <div style={{
-                    display: 'flex',
-                    gap: '0.5rem',
+                    display: 'inline-flex',
+                    gap: '0.2rem',
+                    padding: '0.25rem',
+                    borderRadius: '8px',
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)',
                     justifyContent: 'center',
-                    marginBottom: '1.5rem',
-                    opacity: isActive ? 0.5 : 1,
+                    marginBottom: '1.25rem',
+                    opacity: isActive ? 0.45 : 1,
                     pointerEvents: isActive ? 'none' : 'auto',
-                    transition: 'all 0.3s ease'
+                    transition: 'opacity 0.2s ease'
                 }}>
                     <button
                         onClick={() => addTime(-1)}
-                        className="btn-glass"
+                        className="focus-time-chip"
                         style={{
-                            padding: '0.4rem 0.8rem',
-                            fontSize: '0.75rem',
-                            borderRadius: '10px',
-                            fontWeight: '700',
-                            color: 'var(--error)',
-                            opacity: minutes <= 1 ? 0.3 : 1
+                            padding: '0.3rem 0.6rem',
+                            fontSize: '0.72rem',
+                            fontFamily: 'var(--font-mono)',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                            border: 'none',
+                            background: 'transparent',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            opacity: minutes <= 1 ? 0.35 : 1
                         }}
                         disabled={minutes <= 1}
                     >
@@ -205,12 +208,17 @@ export default function FocusTimer() {
                         <button
                             key={amt}
                             onClick={() => addTime(amt)}
-                            className="btn-glass"
+                            className="focus-time-chip"
                             style={{
-                                padding: '0.4rem 0.8rem',
-                                fontSize: '0.75rem',
-                                borderRadius: '10px',
-                                fontWeight: '700'
+                                padding: '0.3rem 0.6rem',
+                                fontSize: '0.72rem',
+                                fontFamily: 'var(--font-mono)',
+                                borderRadius: '6px',
+                                fontWeight: '600',
+                                border: 'none',
+                                background: 'transparent',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer'
                             }}
                         >
                             +{amt}m
@@ -218,61 +226,60 @@ export default function FocusTimer() {
                     ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '0.55rem', justifyContent: 'center', marginBottom: '1.15rem' }}>
                     <button
                         onClick={toggleTimer}
                         className="btn-primary"
                         style={{
-                            padding: '0.75rem 2rem',
-                            borderRadius: '18px',
-                            background: isActive ? 'rgba(255,255,255,0.05)' : 'var(--accent-gradient)',
-                            color: isActive ? 'var(--text-primary)' : 'white',
-                            border: isActive ? '1px solid var(--glass-border)' : 'none',
-                            minWidth: '140px',
-                            fontWeight: '700',
-                            fontSize: '1rem',
-                            boxShadow: isActive ? 'none' : '0 4px 15px rgba(99, 102, 241, 0.3)',
+                            padding: '0.72rem 1.35rem',
+                            borderRadius: '10px',
+                            background: isActive ? 'var(--bg-tertiary)' : 'var(--accent-primary)',
+                            color: isActive ? 'var(--text-primary)' : '#ffffff',
+                            border: isActive ? '1px solid var(--border-color-strong)' : 'none',
+                            flex: 1,
+                            fontWeight: '600',
+                            fontSize: '0.88rem',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '0.5rem'
+                            gap: '0.5rem',
+                            cursor: 'pointer'
                         }}
                     >
-                        <span>{isActive ? '⏸️' : '▶️'}</span>
+                        {isActive ? <Pause size={15} /> : <Play size={15} fill="currentColor" />}
                         <span>{isActive ? 'Pause' : 'Start Focus'}</span>
                     </button>
                     <button
                         onClick={resetTimer}
                         className="modern-reset-btn"
                         style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '14px',
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '10px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: '1px solid var(--glass-border)',
-                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid var(--border-color-strong)',
+                            background: 'var(--bg-tertiary)',
                             cursor: 'pointer',
                             color: 'var(--text-secondary)',
-                            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                            position: 'relative',
-                            overflow: 'hidden'
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
                         }}
                         title="Reset Timer"
                     >
-                        <span className="reset-icon" style={{ fontSize: '1.1rem', position: 'relative', zIndex: 1 }}>🔄</span>
-                        <div className="reset-bg-glow" />
+                        <RotateCcw size={16} className="reset-icon" style={{ transition: 'transform 0.3s ease' }} />
                     </button>
                 </div>
 
                 <div style={{
-                    fontSize: '0.85rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.74rem',
                     color: 'var(--text-tertiary)',
-                    fontWeight: '600',
                     letterSpacing: '0.02em'
                 }}>
-                    Completed Sessions: <span style={{ color: 'var(--text-primary)' }}>{sessions}</span>
+                    SESSIONS COMPLETED: <span style={{ color: 'var(--text-primary)', fontWeight: '700' }}>{sessions}</span>
                 </div>
             </div>
 
@@ -280,12 +287,9 @@ export default function FocusTimer() {
             {showAlarm && (
                 <div className="alarm-overlay animate-fade-in" style={{
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
+                    inset: 0,
                     background: 'var(--bg-glass-strong)',
-                    backdropFilter: 'blur(15px)',
+                    backdropFilter: 'blur(14px)',
                     zIndex: 10,
                     display: 'flex',
                     flexDirection: 'column',
@@ -293,74 +297,53 @@ export default function FocusTimer() {
                     justifyContent: 'center',
                     padding: '2rem'
                 }}>
-                    <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'pulse 1s infinite' }}>🔔</div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>Time's Up!</h2>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                        {mode === 'study' ? 'Great session! Take a break.' : 'Break over! Ready to focus?'}
+                    <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '12px',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--accent-primary)',
+                        color: 'var(--accent-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '1rem'
+                    }}>
+                        <Bell size={24} />
+                    </div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.35rem' }}>Time's Up</h2>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.88rem' }}>
+                        {mode === 'study' ? 'Session complete. Take a short break.' : 'Break finished. Ready to focus?'}
                     </p>
                     <button
                         onClick={stopAlarm}
-                        className="btn-primary"
+                        className="btn btn-primary"
                         style={{
-                            padding: '1rem 2rem',
-                            borderRadius: '18px',
+                            padding: '0.8rem 1.5rem',
+                            borderRadius: '10px',
                             width: '100%',
-                            fontWeight: '700'
+                            fontWeight: '600'
                         }}
                     >
-                        Got it, Stop
+                        Dismiss
                     </button>
                 </div>
             )}
 
             <style>{`
+                .focus-time-chip:hover {
+                    background: var(--bg-secondary) !important;
+                    color: var(--text-primary) !important;
+                }
                 .modern-reset-btn:hover {
-                    border-color: var(--accent-primary);
-                    color: var(--text-primary);
-                    transform: translateY(-2px);
-                    box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2);
+                    border-color: var(--accent-primary) !important;
+                    color: var(--text-primary) !important;
                 }
-
                 .modern-reset-btn:hover .reset-icon {
-                    transform: rotate(180deg);
-                }
-
-                .modern-reset-btn:active {
-                    transform: translateY(0) scale(0.95);
-                }
-
-                .reset-bg-glow {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    width: 0;
-                    height: 0;
-                    background: var(--accent-primary);
-                    border-radius: 50%;
-                    transform: translate(-50%, -50%);
-                    opacity: 0;
-                    filter: blur(20px);
-                    transition: all 0.6s ease;
-                }
-
-                .modern-reset-btn:hover .reset-bg-glow {
-                    width: 100%;
-                    height: 100%;
-                    opacity: 0.1;
-                }
-
-                @keyframes pulse {
-                    0% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.1); opacity: 0.8; }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-
-                .alarm-overlay {
-                    animation: fadeIn 0.3s ease-out;
+                    transform: rotate(-90deg);
                 }
             `}</style>
 
-            {/* Notification Sound (Hidden) */}
             <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" />
         </div>
     );

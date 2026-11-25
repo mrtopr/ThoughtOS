@@ -17,6 +17,13 @@ export default function Links() {
 
     useEffect(() => {
         loadLinks();
+        const refresh = () => loadLinks();
+        window.addEventListener('workspaceDataUpdated', refresh);
+        window.addEventListener('workspaceChanged', refresh);
+        return () => {
+            window.removeEventListener('workspaceDataUpdated', refresh);
+            window.removeEventListener('workspaceChanged', refresh);
+        };
     }, []);
 
     const loadLinks = async () => {

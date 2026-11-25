@@ -1,472 +1,358 @@
-// Supabase-based storage for managing all workspace data
-import { supabase } from './supabaseClient';
+// LocalStorage-based storage for managing all workspace data
 
-// Helper to get current user ID
-const getCurrentUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id;
+const STORAGE_KEYS = {
+  links: 'thoughtos_links',
+  projects: 'thoughtos_projects',
+  blog: 'thoughtos_blog_posts',
+  prompts: 'thoughtos_prompts',
+  videos: 'thoughtos_videos'
+};
+
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `item_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+};
+
+const readCollection = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error(`Error reading ${key} from localStorage:`, error);
+    return [];
+  }
+};
+
+const writeCollection = (key, items, type = 'all') => {
+  try {
+    localStorage.setItem(key, JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent('workspaceDataUpdated', { detail: { type } }));
+    return true;
+  } catch (error) {
+    console.error(`Error writing ${key} to localStorage:`, error);
+    throw error;
+  }
 };
 
 // Links Management
 export const linksStorage = {
   getAll: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('links')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform snake_case to camelCase for JavaScript
-      return (data || []).map(link => ({
+    const items = readCollection(STORAGE_KEYS.links);
+    return items
+      .map(link => ({
         ...link,
-        name: link.title  // Map title to name for UI
-      }));
-    } catch (error) {
-      console.error('Error fetching links:', error);
-      return [];
-    }
+        name: link.name || link.title,
+        title: link.title || link.name
+      }))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
 
   add: async (link) => {
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('links')
-        .insert([{
-          title: link.name,
-          url: link.url,
-          category: link.category,
-          description: link.description,
-          user_id: userId
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error adding link:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.links);
+    const now = new Date().toISOString();
+    const newItem = {
+      id: generateId(),
+      title: link.name || link.title,
+      name: link.name || link.title,
+      url: link.url,
+      category: link.category || 'Other',
+      description: link.description || '',
+      workspace_id: link.workspace_id || null,
+      created_at: now,
+      updated_at: now
+    };
+    items.unshift(newItem);
+    writeCollection(STORAGE_KEYS.links, items);
+    return newItem;
   },
 
   update: async (id, updates) => {
-    try {
-      const updateData = { ...updates };
-      if (updates.name) {
-        updateData.title = updates.name;
-        delete updateData.name;
-      }
+    const items = readCollection(STORAGE_KEYS.links);
+    const index = items.findIndex(item => item.id === id);
+    if (index === -1) throw new Error('Link not found');
 
-      const { data, error } = await supabase
-        .from('links')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating link:', error);
-      throw error;
-    }
+    const updated = {
+      ...items[index],
+      ...updates,
+      title: updates.name || updates.title || items[index].title,
+      name: updates.name || updates.title || items[index].name,
+      updated_at: new Date().toISOString()
+    };
+    items[index] = updated;
+    writeCollection(STORAGE_KEYS.links, items);
+    return updated;
   },
 
   delete: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('links')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting link:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.links);
+    writeCollection(STORAGE_KEYS.links, items.filter(item => item.id !== id));
+    return true;
   },
 
   getByCategory: async (category) => {
-    try {
-      const { data, error } = await supabase
-        .from('links')
-        .select('*')
-        .eq('category', category)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching links by category:', error);
-      return [];
-    }
+    const all = await linksStorage.getAll();
+    return all.filter(link => link.category === category);
   }
 };
 
 // Projects Management
 export const projectsStorage = {
   getAll: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform snake_case to camelCase for JavaScript
-      return (data || []).map(project => ({
+    const items = readCollection(STORAGE_KEYS.projects);
+    return items
+      .map(project => ({
         ...project,
-        githubUrl: project.github_url,
-        liveUrl: project.live_url
-      }));
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-      return [];
-    }
+        githubUrl: project.githubUrl ?? project.github_url ?? '',
+        liveUrl: project.liveUrl ?? project.live_url ?? ''
+      }))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
 
   add: async (project) => {
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([{
-          name: project.name,
-          description: project.description,
-          github_url: project.githubUrl,
-          live_url: project.liveUrl,
-          technologies: project.technologies,
-          status: project.status,
-          user_id: userId
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error adding project:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.projects);
+    const now = new Date().toISOString();
+    const newItem = {
+      id: generateId(),
+      name: project.name,
+      description: project.description || '',
+      github_url: project.githubUrl || '',
+      githubUrl: project.githubUrl || '',
+      live_url: project.liveUrl || '',
+      liveUrl: project.liveUrl || '',
+      technologies: project.technologies || '',
+      status: project.status || 'In Progress',
+      workspace_id: project.workspace_id || null,
+      created_at: now,
+      updated_at: now
+    };
+    items.unshift(newItem);
+    writeCollection(STORAGE_KEYS.projects, items);
+    return newItem;
   },
 
   update: async (id, updates) => {
-    try {
-      const updateData = {};
-      if (updates.name) updateData.name = updates.name;
-      if (updates.description) updateData.description = updates.description;
-      if (updates.githubUrl) updateData.github_url = updates.githubUrl;
-      if (updates.liveUrl) updateData.live_url = updates.liveUrl;
-      if (updates.technologies) updateData.technologies = updates.technologies;
-      if (updates.status) updateData.status = updates.status;
+    const items = readCollection(STORAGE_KEYS.projects);
+    const index = items.findIndex(item => item.id === id);
+    if (index === -1) throw new Error('Project not found');
 
-      const { data, error } = await supabase
-        .from('projects')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating project:', error);
-      throw error;
-    }
+    const updated = {
+      ...items[index],
+      ...updates,
+      github_url: updates.githubUrl !== undefined ? updates.githubUrl : items[index].github_url,
+      live_url: updates.liveUrl !== undefined ? updates.liveUrl : items[index].live_url,
+      updated_at: new Date().toISOString()
+    };
+    items[index] = updated;
+    writeCollection(STORAGE_KEYS.projects, items);
+    return updated;
   },
 
   delete: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting project:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.projects);
+    writeCollection(STORAGE_KEYS.projects, items.filter(item => item.id !== id));
+    return true;
   }
 };
 
 // Blog Posts Management
 export const blogStorage = {
   getAll: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform snake_case to camelCase for JavaScript
-      return (data || []).map(post => ({
+    const items = readCollection(STORAGE_KEYS.blog);
+    return items
+      .map(post => ({
         ...post,
-        createdAt: post.created_at
-      }));
-    } catch (error) {
-      console.error('Error fetching blog posts:', error);
-      return [];
-    }
+        createdAt: post.createdAt || post.created_at
+      }))
+      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
   },
 
   add: async (post) => {
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .insert([{ ...post, user_id: userId }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error adding blog post:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.blog);
+    const now = new Date().toISOString();
+    const newItem = {
+      id: generateId(),
+      ...post,
+      created_at: now,
+      createdAt: now,
+      updated_at: now
+    };
+    items.unshift(newItem);
+    writeCollection(STORAGE_KEYS.blog, items);
+    return newItem;
   },
 
   update: async (id, updates) => {
-    try {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+    const items = readCollection(STORAGE_KEYS.blog);
+    const index = items.findIndex(item => item.id === id);
+    if (index === -1) throw new Error('Blog post not found');
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating blog post:', error);
-      throw error;
-    }
+    const updated = {
+      ...items[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    items[index] = updated;
+    writeCollection(STORAGE_KEYS.blog, items);
+    return updated;
   },
 
   delete: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting blog post:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.blog);
+    writeCollection(STORAGE_KEYS.blog, items.filter(item => item.id !== id));
+    return true;
   },
 
   getByTag: async (tag) => {
-    try {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .ilike('tags', `%${tag}%`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching blog posts by tag:', error);
-      return [];
-    }
+    const all = await blogStorage.getAll();
+    const lower = tag.toLowerCase();
+    return all.filter(post => {
+      if (Array.isArray(post.tags)) {
+        return post.tags.some(t => String(t).toLowerCase().includes(lower));
+      }
+      return String(post.tags || '').toLowerCase().includes(lower);
+    });
   }
 };
 
 // Prompts Management
 export const promptsStorage = {
   getAll: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('prompts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching prompts:', error);
-      return [];
-    }
+    const items = readCollection(STORAGE_KEYS.prompts);
+    return items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
 
   add: async (prompt) => {
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('prompts')
-        .insert([{ ...prompt, user_id: userId }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error adding prompt:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.prompts);
+    const now = new Date().toISOString();
+    const newItem = {
+      id: generateId(),
+      ...prompt,
+      created_at: now,
+      updated_at: now
+    };
+    items.unshift(newItem);
+    writeCollection(STORAGE_KEYS.prompts, items);
+    return newItem;
   },
 
   update: async (id, updates) => {
-    try {
-      const { data, error } = await supabase
-        .from('prompts')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+    const items = readCollection(STORAGE_KEYS.prompts);
+    const index = items.findIndex(item => item.id === id);
+    if (index === -1) throw new Error('Prompt not found');
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating prompt:', error);
-      throw error;
-    }
+    const updated = {
+      ...items[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    items[index] = updated;
+    writeCollection(STORAGE_KEYS.prompts, items);
+    return updated;
   },
 
   delete: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('prompts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting prompt:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.prompts);
+    writeCollection(STORAGE_KEYS.prompts, items.filter(item => item.id !== id));
+    return true;
   },
 
   getByCategory: async (category) => {
-    try {
-      const { data, error } = await supabase
-        .from('prompts')
-        .select('*')
-        .eq('category', category)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching prompts by category:', error);
-      return [];
-    }
+    const all = await promptsStorage.getAll();
+    return all.filter(prompt => prompt.category === category);
   }
 };
 
 // Videos Management
 export const videosStorage = {
   getAll: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform snake_case to camelCase for JavaScript
-      return (data || []).map(video => ({
+    const items = readCollection(STORAGE_KEYS.videos);
+    return items
+      .map(video => ({
         ...video,
-        videoId: video.video_id
-      }));
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-      return [];
-    }
+        videoId: video.videoId || video.video_id
+      }))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
 
   add: async (video) => {
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('videos')
-        .insert([{
-          title: video.title,
-          url: video.url,
-          video_id: video.videoId,
-          description: video.description,
-          notes: video.notes,
-          user_id: userId
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error adding video:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.videos);
+    const now = new Date().toISOString();
+    const newItem = {
+      id: generateId(),
+      title: video.title,
+      url: video.url,
+      video_id: video.videoId,
+      videoId: video.videoId,
+      description: video.description || '',
+      notes: video.notes || '',
+      workspace_id: video.workspace_id || null,
+      created_at: now,
+      updated_at: now
+    };
+    items.unshift(newItem);
+    writeCollection(STORAGE_KEYS.videos, items);
+    return newItem;
   },
 
   update: async (id, updates) => {
-    try {
-      const updateData = { ...updates };
-      if (updates.videoId) {
-        updateData.video_id = updates.videoId;
-        delete updateData.videoId;
-      }
+    const items = readCollection(STORAGE_KEYS.videos);
+    const index = items.findIndex(item => item.id === id);
+    if (index === -1) throw new Error('Video not found');
 
-      const { data, error } = await supabase
-        .from('videos')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating video:', error);
-      throw error;
-    }
+    const updated = {
+      ...items[index],
+      ...updates,
+      video_id: updates.videoId !== undefined ? updates.videoId : items[index].video_id,
+      updated_at: new Date().toISOString()
+    };
+    items[index] = updated;
+    writeCollection(STORAGE_KEYS.videos, items);
+    return updated;
   },
 
   delete: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('videos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting video:', error);
-      throw error;
-    }
+    const items = readCollection(STORAGE_KEYS.videos);
+    writeCollection(STORAGE_KEYS.videos, items.filter(item => item.id !== id));
+    return true;
   }
 };
 
-
-// Theme Management (still using localStorage for theme preference)
+// Theme Management
 export const themeStorage = {
   get: () => localStorage.getItem('workspace_theme') || 'dark',
   set: (theme) => localStorage.setItem('workspace_theme', theme)
+};
+
+// Local Backup & Restore Utilities
+export const exportAllLocalData = () => {
+  const backup = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    data: {}
+  };
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key) {
+      backup.data[key] = localStorage.getItem(key);
+    }
+  }
+  return backup;
+};
+
+export const importAllLocalData = (backup) => {
+  if (!backup || !backup.data || typeof backup.data !== 'object') {
+    throw new Error('Invalid backup file format');
+  }
+  Object.entries(backup.data).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      localStorage.setItem(key, value);
+    }
+  });
+  return true;
 };
 
 // Export all for convenience

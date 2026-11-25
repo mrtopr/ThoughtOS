@@ -17,6 +17,13 @@ export default function Prompts() {
 
     useEffect(() => {
         loadPrompts();
+        const refresh = () => loadPrompts();
+        window.addEventListener('workspaceDataUpdated', refresh);
+        window.addEventListener('workspaceChanged', refresh);
+        return () => {
+            window.removeEventListener('workspaceDataUpdated', refresh);
+            window.removeEventListener('workspaceChanged', refresh);
+        };
     }, []);
 
     const loadPrompts = async () => {

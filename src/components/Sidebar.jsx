@@ -1,26 +1,39 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useWorkspace } from '../contexts/WorkspaceContext';
+import {
+    LayoutDashboard,
+    Link2,
+    FolderKanban,
+    FileText,
+    Sparkles,
+    PlayCircle,
+    BarChart3,
+    Layers
+} from 'lucide-react';
+import BrandLogo from './BrandLogo';
 
 export default function Sidebar() {
     const location = useLocation();
     const [isHovered, setIsHovered] = useState(false);
     const { isSidebarOpen, setIsSidebarOpen } = useWorkspace();
 
-    // Close sidebar on location change for mobile
     useEffect(() => {
         setIsSidebarOpen(false);
     }, [location.pathname, setIsSidebarOpen]);
 
     const navItems = [
-        { path: '/', label: 'Dashboard', icon: '🏠' },
-        { path: '/links', label: 'Links', icon: '🔗' },
-        { path: '/projects', label: 'Projects', icon: '💼' },
-        { path: '/blog', label: 'Blog', icon: '📝' },
-        { path: '/prompts', label: 'Prompts', icon: '✨' },
-        { path: '/videos', label: 'Videos', icon: '🎥' },
-        { path: '/workspaces', label: 'Workspaces', icon: '⚙️' }
+        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/links', label: 'Links', icon: Link2 },
+        { path: '/projects', label: 'Projects', icon: FolderKanban },
+        { path: '/blog', label: 'Blog', icon: FileText },
+        { path: '/prompts', label: 'Prompts', icon: Sparkles },
+        { path: '/videos', label: 'Videos', icon: PlayCircle },
+        { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+        { path: '/workspaces', label: 'Workspaces', icon: Layers }
     ];
+
+    const isExpanded = isHovered || isSidebarOpen;
 
     return (
         <>
@@ -30,22 +43,19 @@ export default function Sidebar() {
                 onClick={() => setIsSidebarOpen(false)}
                 style={{
                     position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.4)',
+                    inset: 0,
+                    background: 'rgba(0, 0, 0, 0.45)',
                     backdropFilter: 'blur(4px)',
                     zIndex: 99,
                     display: 'none',
                     opacity: isSidebarOpen ? 1 : 0,
                     pointerEvents: isSidebarOpen ? 'auto' : 'none',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.25s ease'
                 }}
             />
 
             <aside
-                className={`sidebar glass-strong ${isSidebarOpen ? 'mobile-open' : ''}`}
+                className={`sidebar ${isSidebarOpen ? 'mobile-open' : ''}`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 style={{
@@ -54,90 +64,91 @@ export default function Sidebar() {
                     top: 0,
                     height: '100vh',
                     width: isHovered ? 'var(--sidebar-width-expanded)' : 'var(--sidebar-width-collapsed)',
-                    padding: '1.5rem 0',
-                    borderRight: '1px solid var(--glass-border)',
-                    boxShadow: 'none',
+                    padding: '1.25rem 0',
+                    background: 'var(--bg-secondary)',
+                    borderRight: '1px solid var(--border-color)',
+                    boxShadow: isHovered ? 'var(--shadow-lg)' : 'none',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '2rem',
+                    gap: '1.75rem',
                     zIndex: 100,
                     overflowY: 'auto',
                     overflowX: 'hidden',
-                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    transition: 'width 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease'
                 }}
             >
                 {/* Brand */}
                 <Link to="/" style={{
-                    fontSize: '1.5rem',
-                    fontWeight: '800',
-                    background: 'var(--accent-gradient)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
                     textDecoration: 'none',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: isHovered ? 'flex-start' : 'center',
-                    gap: '0.5rem',
-                    padding: '0 1rem',
-                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    justifyContent: isExpanded ? 'flex-start' : 'center',
+                    gap: '0.75rem',
+                    padding: isExpanded ? '0 1.25rem' : '0',
                     whiteSpace: 'nowrap'
                 }}>
-                    <span style={{ fontSize: '1.75rem' }}>⚡</span>
-                    {(isHovered || isSidebarOpen) && <span>ThoughtOS</span>}
+                    <BrandLogo size={34} />
+                    {isExpanded && (
+                        <span style={{
+                            fontFamily: 'var(--font-heading)',
+                            fontSize: '1.15rem',
+                            fontWeight: '700',
+                            letterSpacing: '-0.03em',
+                            color: 'var(--text-primary)'
+                        }}>
+                            Thought<span style={{ color: 'var(--accent-primary)' }}>OS</span>
+                        </span>
+                    )}
                 </Link>
 
                 {/* Navigation Links */}
                 <nav style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.5rem',
+                    gap: '0.25rem',
                     flex: 1,
                     padding: '0 0.75rem'
                 }}>
-                    {navItems.map((item, index) => {
+                    {navItems.map((item) => {
                         const isActive = location.pathname === item.path;
+                        const Icon = item.icon;
 
                         return (
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className="sidebar-link"
+                                className={`sidebar-link ${isActive ? 'active' : ''}`}
+                                title={!isExpanded ? item.label : undefined}
                                 style={{
-                                    padding: '0.875rem',
-                                    borderRadius: '14px',
-                                    color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                                    fontWeight: '600',
-                                    background: 'transparent',
-                                    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                    padding: '0.7rem 0.85rem',
+                                    borderRadius: '10px',
+                                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                    fontWeight: isActive ? '600' : '500',
+                                    fontSize: '0.9rem',
+                                    background: isActive ? 'var(--bg-tertiary)' : 'transparent',
+                                    transition: 'all 0.18s ease',
                                     textDecoration: 'none',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: (isHovered || isSidebarOpen) ? 'flex-start' : 'center',
-                                    gap: '0.75rem',
-                                    border: 'none',
+                                    justifyContent: isExpanded ? 'flex-start' : 'center',
+                                    gap: '0.85rem',
+                                    borderLeft: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                                     position: 'relative',
-                                    overflow: 'visible',
                                     whiteSpace: 'nowrap'
                                 }}
                             >
+                                <Icon
+                                    size={19}
+                                    strokeWidth={isActive ? 2.2 : 1.75}
+                                    className="sidebar-icon"
+                                    style={{
+                                        flexShrink: 0,
+                                        color: isActive ? 'var(--accent-primary)' : 'currentColor'
+                                    }}
+                                />
 
-                                {/* Icon */}
-                                <span style={{
-                                    fontSize: '1.4rem',
-                                    flexShrink: 0,
-                                    transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                    display: 'inline-block'
-                                }} className="sidebar-icon">
-                                    {item.icon}
-                                </span>
-
-                                {/* Text (visible on hover) */}
-                                {(isHovered || isSidebarOpen) && (
-                                    <span style={{
-                                        opacity: 1,
-                                        transition: 'opacity 0.3s ease'
-                                    }}>
+                                {isExpanded && (
+                                    <span style={{ letterSpacing: '-0.01em' }}>
                                         {item.label}
                                     </span>
                                 )}
@@ -148,42 +159,30 @@ export default function Sidebar() {
 
                 {/* Footer Info */}
                 <div style={{
-                    padding: '1rem',
+                    padding: '0.85rem 1rem',
                     borderTop: '1px solid var(--border-color)',
-                    fontSize: '0.85rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
                     color: 'var(--text-tertiary)',
                     textAlign: 'center',
-                    opacity: (isHovered || isSidebarOpen) ? 1 : 0,
-                    transition: 'opacity 0.3s ease'
+                    opacity: isExpanded ? 1 : 0,
+                    transition: 'opacity 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    letterSpacing: '0.04em'
                 }}>
-                    <p style={{ margin: 0 }}>ThoughtOS</p>
-                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem' }}>v1.0.0</p>
+                    THOUGHTOS · LOCAL
                 </div>
 
                 <style>{`
-                    @keyframes breathe {
-                        0%, 100% {
-                            opacity: 0.6;
-                            transform: translateY(-50%) scale(1);
-                        }
-                        50% {
-                            opacity: 1;
-                            transform: translateY(-50%) scale(1.05);
-                        }
-                    }
-
-                    .sidebar-link:hover .sidebar-icon {
-                        transform: rotate(5deg) scale(1.1);
-                    }
-
                     .sidebar-link:hover {
                         background: var(--bg-tertiary) !important;
+                        color: var(--text-primary) !important;
                     }
 
                     @media (max-width: 768px) {
                         .sidebar {
                             transform: translateX(-100%);
-                            width: 260px !important;
+                            width: 256px !important;
                             visibility: hidden;
                         }
 

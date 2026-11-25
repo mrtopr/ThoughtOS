@@ -45,7 +45,7 @@ export default function WorkspaceManager() {
         const gradients = {
             youtube: 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)',
             college: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
-            personal: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+            personal: 'linear-gradient(135deg, #111111 0%, #2e2e2e 100%)',
             custom: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)'
         };
         return gradients[type] || gradients.custom;

@@ -10,24 +10,6 @@ export default function AIRewriter({ content, onRewrite, compact = false }) {
     const modes = geminiAI.getAvailableModes();
 
     const handleRewrite = async () => {
-        // Check if API key is configured
-        if (!geminiAI.hasApiKey()) {
-            alert.warning('Please configure your Gemini API key first. You can set it in the settings or by clicking the AI button.');
-            // Prompt for API key
-            const apiKey = prompt('Enter your Gemini API key:\n\n(You can get one from https://makersuite.google.com/app/apikey)');
-            if (apiKey && apiKey.trim()) {
-                try {
-                    geminiAI.setApiKey(apiKey.trim());
-                    alert.success('API key saved successfully!');
-                } catch (error) {
-                    alert.error('Failed to save API key: ' + error.message);
-                    return;
-                }
-            } else {
-                return;
-            }
-        }
-
         // Validate content
         if (!content || content.trim().length === 0) {
             alert.warning('Please enter some content to rewrite');
@@ -38,7 +20,7 @@ export default function AIRewriter({ content, onRewrite, compact = false }) {
         try {
             const rewrittenContent = await geminiAI.rewriteContent(content, selectedMode);
             onRewrite(rewrittenContent);
-            alert.success('Content rewritten successfully! ✨');
+            alert.success('Content rewritten!');
             setShowModeSelector(false);
         } catch (error) {
             console.error('AI rewriting error:', error);
